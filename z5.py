@@ -1,8 +1,11 @@
 import hashlib
+import binascii
 
 
 #hasz(x) = pierwsze_56_bitów(MD5(MD5(x)))
 def hasz(x):
+    un_hex_x = binascii.unhexlify(x)#hex zmieniamy na string ascii
+    x =un_hex_x
     md5_1 = hashlib.md5()
     md5_1.update(x)
     r = md5_1.hexdigest()
@@ -13,6 +16,45 @@ def hasz(x):
 
     first_56_bits = r[0:14]
     return first_56_bits
+
+# node -1 jeżeli nie istnieje
+class Node:
+    def __init__(self,number, my_hash):
+        self.number = number
+        self.my_hash = my_hash
+        self.prev_nodes = list()
+        self.next_nodes = list()
+
+
+#x1 = 0x 452101fe10345a4c8b7d248649cfd
+current_elem_number=0
+n = Node(current_elem_number, hasz('452101fe10345a4c8b7d248649cfd'))
+all_nodes = list()
+all_nodes.append(n)
+
+
+def getnextnode(current_node_number):
+    current_node = all_nodes[current_node_number]
+    new_hash = hasz(current_node.my_hash)
+    next_node_number = -1
+    for n in all_nodes:
+        if n.my_hash == new_hash:
+            next_node_number = n.number
+            n.prev_nodes.append(current_node.number)
+    if next_node_number == -1:
+        #dodajemy nowy
+        current_node.next_nodes.append(len(all_nodes))
+        new_node = Node(len(all_nodes), new_hash)
+        new_node.prev_nodes.append(current_node.number)
+        all_nodes.append(new_node)
+    else:
+        #dodajemy tylko wskaźnik na istniejący node
+        current_node.next_nodes.append(next_node_number)
+
+    return current_node.next_node
+
+
+
 
 
 def floyd(f, x0):
@@ -28,29 +70,11 @@ def floyd(f, x0):
         tortoise = f(tortoise)
         hare = f(f(hare))
 
-    # At this point the tortoise position, ν, which is also equal
-    # to the distance between hare and tortoise, is divisible by
-    # the period λ. So hare moving in circle one step at a time,
-    # and tortoise (reset to x0) moving towards the circle, will
-    # intersect at the beginning of the circle. Because the
-    # distance between them is constant at 2ν, a multiple of λ,
-    # they will agree as soon as the tortoise reaches index μ.
+    print "Żółw złapał zająca. Poprzednie wierzchołki:"
+    print all_nodes[hare].prev_nodes
+    print "Node:\thasz:"
+    for n in all_nodes[hare].prev_nodes:
+        print("%d\t%s" % (n, all_nodes[n].my_hash))
 
-    # Find the position μ of first repetition.
-    mu = 0
-    tortoise = x0
-    while tortoise != hare:
-        tortoise = f(tortoise)
-        hare = f(hare)  # Hare and tortoise move at same speed
-        mu += 1
 
-    # Find the length of the shortest cycle starting from x_μ
-    # The hare moves one step at a time while tortoise is still.
-    # lam is incremented until λ is found.
-    lam = 1
-    hare = f(tortoise)
-    while tortoise != hare:
-        hare = f(hare)
-        lam += 1
-
-    return lam, mu
+floyd(getnextnode, 0)
