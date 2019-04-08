@@ -35,23 +35,24 @@ all_nodes.append(n)
 
 def getnextnode(current_node_number):
     current_node = all_nodes[current_node_number]
-    new_hash = hasz(current_node.my_hash)
-    next_node_number = -1
-    for n in all_nodes:
-        if n.my_hash == new_hash:
-            next_node_number = n.number
-            n.prev_nodes.append(current_node.number)
-    if next_node_number == -1:
-        #dodajemy nowy
-        current_node.next_nodes.append(len(all_nodes))
-        new_node = Node(len(all_nodes), new_hash)
-        new_node.prev_nodes.append(current_node.number)
-        all_nodes.append(new_node)
-    else:
-        #dodajemy tylko wskaźnik na istniejący node
-        current_node.next_nodes.append(next_node_number)
+    if len(current_node.next_nodes) == 0:
+        new_hash = hasz(current_node.my_hash)
+        next_node_number = -1
+        for n in all_nodes:
+            if n.my_hash == new_hash:
+                next_node_number = n.number
+                n.prev_nodes.append(current_node.number)
+        if next_node_number == -1:
+            #dodajemy nowy
+            current_node.next_nodes.append(len(all_nodes))
+            new_node = Node(len(all_nodes), new_hash)
+            new_node.prev_nodes.append(current_node.number)
+            all_nodes.append(new_node)
+        else:
+            #dodajemy tylko wskaźnik na istniejący node
+            current_node.next_nodes.append(next_node_number)
 
-    return current_node.next_node
+    return current_node.next_nodes[0]
 
 
 
