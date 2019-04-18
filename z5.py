@@ -2,20 +2,25 @@ import hashlib
 import binascii
 
 
+def reduction(hex_hasz_x):
+    return "452101" + hex_hasz_x[0:4]
+
 #hasz(x) = pierwsze_56_bitów(MD5(MD5(x)))
 def hasz(x):
     un_hex_x = binascii.unhexlify(x)#hex zmieniamy na string ascii
     x =un_hex_x
     md5_1 = hashlib.md5()
     md5_1.update(x)
-    r = md5_1.hexdigest()
+    r = md5_1.digest()
 
     md5_2 = hashlib.md5()
     md5_2.update(r)
     r = md5_2.hexdigest()
 
-    first_56_bits = r[0:14]
-    return first_56_bits
+    #first_56_bits = r[0:14]
+   # return first_56_bits
+    return r
+
 
 # node -1 jeżeli nie istnieje
 class Node:
