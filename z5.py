@@ -3,65 +3,29 @@ import binascii
 
 
 def reduction(hex_hasz_x):
-    return "452101" + hex_hasz_x[0:4]
+    return "452101" + hex_hasz_x
 
 #hasz(x) = pierwsze_56_bitów(MD5(MD5(x)))
 def hasz(x):
     un_hex_x = binascii.unhexlify(x)#hex zmieniamy na string ascii
-    x =un_hex_x
     md5_1 = hashlib.md5()
-    md5_1.update(x)
+    md5_1.update(un_hex_x)
     r = md5_1.digest()
 
     md5_2 = hashlib.md5()
     md5_2.update(r)
-    r = md5_2.hexdigest()
+    r2 = md5_2.hexdigest()
 
-    #first_56_bits = r[0:14]
-   # return first_56_bits
-    return r
-
-
-# node -1 jeżeli nie istnieje
-class Node:
-    def __init__(self,number, my_hash):
-        self.number = number
-        self.my_hash = my_hash
-        self.prev_nodes = list()
-        self.next_nodes = list()
+    first_56_bits = r2[0:14]
+    #first_16_bits = r2[0:4]
+    return first_56_bits
+    #return r2
 
 
-#x1 = 0x 452101fe10345a4c8b7d248649cfd
-current_elem_number=0
-n = Node(current_elem_number, hasz('452101fe10345a4c8b7d248649cfd'))
-all_nodes = list()
-all_nodes.append(n)
-
-
-def getnextnode(current_node_number):
-    current_node = all_nodes[current_node_number]
-    if len(current_node.next_nodes) == 0:
-        new_hash = hasz(current_node.my_hash)
-        next_node_number = -1
-        for n in all_nodes:
-            if n.my_hash == new_hash:
-                next_node_number = n.number
-                n.prev_nodes.append(current_node.number)
-        if next_node_number == -1:
-            #dodajemy nowy
-            current_node.next_nodes.append(len(all_nodes))
-            new_node = Node(len(all_nodes), new_hash)
-            new_node.prev_nodes.append(current_node.number)
-            all_nodes.append(new_node)
-        else:
-            #dodajemy tylko wskaźnik na istniejący node
-            current_node.next_nodes.append(next_node_number)
-
-    return current_node.next_nodes[0]
-
-
-
-
+def next_hasz(x):
+    x_in = reduction(x)
+    hasz_out = hasz(x_in)
+    return x_in, hasz_out
 
 def floyd(f, x0):
     # Main phase of algorithm: finding a repetition x_i = x_2i.
@@ -70,17 +34,51 @@ def floyd(f, x0):
     # Eventually they will both be inside the cycle and then,
     # at some point, the distance between them will be
     # divisible by the period λ.
-    tortoise = f(x0)  # f(x0) is the element/node next to x0.
-    hare = f(f(x0))
+    x_in_t, tortoise = f(x0)  # f(x0) is the element/node next to x0.
+    x_in_h, hare_step1 = f(x0)
+    x_in_h, hare_step2 = f(hare_step1)
+    while tortoise != hare_step2:
+        x_in_t, tortoise = f(tortoise)
+        x_in_h, hare_step1 = f(hare_step2)
+        x_in_h, hare_step2 = f(hare_step1)
+
+    # At this point the tortoise position, ν, which is also equal
+    # to the distance between hare and tortoise, is divisible by
+    # the period λ. So hare moving in circle one step at a time,
+    # and tortoise (reset to x0) moving towards the circle, will
+    # intersect at the beginning of the circle. Because the
+    # distance between them is constant at 2ν, a multiple of λ,
+    # they will agree as soon as the tortoise reaches index μ.
+
+    # Find the position μ of first repetition.
+    mu = 0
+    tortoise = x0
+    while tortoise != hare_step2:
+        x_in_t, tortoise = f(tortoise)
+        x_in_h, hare_step2 = f(hare_step2)  # Hare and tortoise move at same speed
+        mu += 1
+
+    print("Żółw złapał zająca.\nX1: ")
+    print(x_in_t)
+    print("\nX2: ")
+    print(x_in_h)
+    print("\nŻółw = Zając:")
+    print(tortoise)
+    print(hare_step2)
+
+    # Find the length of the shortest cycle starting from x_μ
+    # The hare moves one step at a time while tortoise is still.
+    # lam is incremented until λ is found.
+    lam = 1
+    x_in_h, hare = f(tortoise)
     while tortoise != hare:
-        tortoise = f(tortoise)
-        hare = f(f(hare))
+        x_in_h, hare = f(hare)
+        lam += 1
 
-    print "Żółw złapał zająca. Poprzednie wierzchołki:"
-    print all_nodes[hare].prev_nodes
-    print "Node:\thasz:"
-    for n in all_nodes[hare].prev_nodes:
-        print("%d\t%s" % (n, all_nodes[n].my_hash))
+    return lam, mu
 
 
-floyd(getnextnode, 0)
+#lam - długość cyklu, mu - pozycja
+lam, mu = floyd(next_hasz, "66597ea2e4fe91a8747a022900")
+print("lam, mu:")
+print (lam, mu)
