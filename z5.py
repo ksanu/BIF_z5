@@ -82,3 +82,18 @@ def floyd(f, x0):
 lam, mu = floyd(next_hasz, "66597ea2e4fe91a8747a022900")
 print("lam, mu:")
 print (lam, mu)
+
+"""
+Żółw złapał zająca.
+X1:
+452101d7d91a3a2eb09e
+
+X2:
+452101fcb52efeb25310
+
+Żółw = Zając:
+b8e5178c4598ce
+b8e5178c4598ce
+lam, mu:
+92041718 498545622
+"""
