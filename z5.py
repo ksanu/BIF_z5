@@ -7,7 +7,7 @@ def reduction(hex_hasz_x):
 
 #hasz(x) = pierwsze_56_bitów(MD5(MD5(x)))
 def hasz(x):
-    un_hex_x = binascii.unhexlify(x)#hex zmieniamy na string ascii
+    un_hex_x = binascii.unhexlify(x)#hex zmieniamy na ascii(binarna reprezentacja)
     md5_1 = hashlib.md5()
     md5_1.update(un_hex_x)
     r = md5_1.digest()
